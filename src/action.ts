@@ -8,12 +8,12 @@ export interface ActionDecoratorParams {
 }
 function actionDecoratorFactory<T> (params?: ActionDecoratorParams): MethodDecorator {
   return function (target: T, key: string | symbol, descriptor: TypedPropertyDescriptor<any>) {
-    const module = target.constructor as Mod<T,any>
+    const module = target.constructor as Mod<T, any>
     if (!module.actions) {
       module.actions = {}
     }
     const actionFunction: Function = descriptor.value
-    const action: Act<typeof target, any> = async function(context: ActionContext<typeof target, any>, payload: Payload) {
+    const action: Act<typeof target, any> = async function (context: ActionContext<typeof target, any>, payload: Payload) {
       try {
         const actionPayload = await actionFunction.call(context, payload)
         if (params) {
@@ -26,10 +26,10 @@ function actionDecoratorFactory<T> (params?: ActionDecoratorParams): MethodDecor
         console.error(e)
       }
     }
-    module.actions[key] = action
+    module.actions = Object.assign({},module.actions,{[key]:action})
+    // module.actions[key] = action
   }
 }
-
 
 export function Action<T, R> (target: T, key: string | symbol, descriptor: TypedPropertyDescriptor<(...args: any[]) => R>): void
 export function Action<T> (params: ActionDecoratorParams): MethodDecorator
@@ -43,7 +43,7 @@ export function Action<T> (params: ActionDecoratorParams): MethodDecorator
  * @param descriptor the action function descriptor
  * @constructor
  */
-export function Action<T, R> (targetOrParams: T | ActionDecoratorParams, key?: string | symbol,  descriptor?: TypedPropertyDescriptor<(...args: any[]) => R>) {
+export function Action<T, R> (targetOrParams: T | ActionDecoratorParams, key?: string | symbol, descriptor?: TypedPropertyDescriptor<(...args: any[]) => R>) {
   if (!key && !descriptor) {
     /*
      * This is the case when `targetOrParams` is params.
@@ -70,4 +70,3 @@ export function Action<T, R> (targetOrParams: T | ActionDecoratorParams, key?: s
     actionDecoratorFactory()(targetOrParams, key, descriptor)
   }
 }
-
